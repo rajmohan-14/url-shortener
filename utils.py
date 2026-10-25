@@ -1,4 +1,3 @@
-cat > utils.py << 'EOF'
 BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def encode_base62(num: int) -> str:
@@ -13,4 +12,3 @@ def encode_base62(num: int) -> str:
         result = BASE62_ALPHABET[remainder] + result
 
     return result
-EOF
