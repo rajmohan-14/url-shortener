@@ -6,6 +6,7 @@ from ids import generator
 from database import get_db
 from models import URL
 from utils import encode_base62
+from cache import redis_client, CACHE_TTL_SECONDS
 
 app = FastAPI()
 
@@ -31,9 +32,13 @@ def shorten_url(request: URLRequest, db: Session = Depends(get_db)):
 
 @app.get("/{short_code}")
 def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
-    url_entry = db.query(URL).filter(URL.short_code == short_code).first()
+    cached_url = redis_client.get(short_code)
+    if cached_url:
+        return RedirectResponse(url=cached_url)
 
+    url_entry = db.query(URL).filter(URL.short_code == short_code).first()
     if not url_entry:
         raise HTTPException(status_code=404, detail="Short URL not found")
 
+    redis_client.set(short_code, url_entry.original_url, ex=CACHE_TTL_SECONDS)
     return RedirectResponse(url=url_entry.original_url)
